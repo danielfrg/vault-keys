@@ -19,7 +19,7 @@ p { margin: .5rem 0; }
 pre { background: var(--code); border-radius: 6px; padding: .75rem 1rem; overflow-x: auto; margin: .5rem 0; font-size: .9rem; }
 code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 a { color: var(--accent); }
-footer { color: var(--muted); font-size: .85rem; margin-top: 3rem; }
+footer { font-size: 1.1rem; margin-top: 3rem; }
 </style>
 </head>
 <body>
@@ -30,7 +30,7 @@ footer { color: var(--muted); font-size: .85rem; margin-top: 3rem; }
 <h2>Install</h2>
 <p>macOS or Linux, amd64 or arm64:</p>
 <pre><code>curl -fsSL https://danielfrg.github.io/vault-keys/install.sh | bash</code></pre>
-<p>Newest build from <code>main</code> (<code>@VERSION@</code>, commit <code>@COMMIT@</code>):</p>
+<p>Newest build from <code>main</code>:</p>
 <pre><code>curl -fsSL https://danielfrg.github.io/vault-keys/install.sh | KEYS_CHANNEL=main bash</code></pre>
 
 <h2>Use</h2>
@@ -44,7 +44,7 @@ keys run ai -- some-command
 eval "$(keys env ai)"</code></pre>
 
 <footer>
-<a href="https://github.com/danielfrg/vault-keys">Source on GitHub</a>
+<a href="https://github.com/danielfrg/vault-keys">Read more here</a>
 </footer>
 </main>
 </body>

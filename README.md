@@ -13,9 +13,6 @@ macOS or Linux (amd64 or arm64):
 curl -fsSL https://danielfrg.github.io/vault-keys/install.sh | bash
 ```
 
-The installer verifies the download against `SHA256SUMS` and installs `keys`
-to `/usr/local/bin` if writable, else `~/.local/bin`. Options:
-
 - `KEYS_CHANNEL=main`: newest build from `main` instead of the latest release
 - `KEYS_VERSION=1.2.3`: a specific release
 - `KEYS_INSTALL_DIR=<dir>`: install somewhere else
@@ -108,7 +105,3 @@ Vault environment variables:
 | `keys push github <owner/repo> <KEY>` | TODO: Push a stored value to a GitHub Actions secret |
 
 A secret argument is `<secret>` (on the default mount) or `<mount>:<secret>`.
-
-## License
-
-Apache 2.0, see [LICENSE.txt](LICENSE.txt).

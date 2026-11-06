@@ -28,13 +28,13 @@ grep -q 'checksum mismatch' "$work/err" || fail "expected checksum error, got: $
 
 echo "== pages"
 # pages must refuse the tampered archive too
-if bash "$repo_dir/scripts/build-pages.sh" "v$version" "$(printf 'a%.0s' {1..40})" "$work/dist" "$work/site" >/dev/null 2>&1; then
+if bash "$repo_dir/scripts/build-pages.sh" "v$version" "$work/dist" "$work/site" >/dev/null 2>&1; then
     fail "pages accepted a tampered archive"
 fi
 bash "$repo_dir/scripts/package.sh" "v$version" "" "$work/dist2" >/dev/null
 cat "$work"/dist2/*.sha256 > "$work/dist2/SHA256SUMS"; printf 'v%s\n' "$version" > "$work/dist2/VERSION"; rm "$work"/dist2/*.sha256
-bash "$repo_dir/scripts/build-pages.sh" "v$version" "$(printf 'a%.0s' {1..40})" "$work/dist2" "$work/site"
+bash "$repo_dir/scripts/build-pages.sh" "v$version" "$work/dist2" "$work/site"
 for f in index.html install.sh .nojekyll main/VERSION main/SHA256SUMS; do [ -e "$work/site/$f" ] || fail "missing $f in site"; done
-grep -q "$version" "$work/site/index.html" || fail "version not in landing page"
-grep -q '@VERSION@' "$work/site/index.html" && fail "placeholder left in landing page"
+grep -q 'Read more here' "$work/site/index.html" || fail "landing page missing"
+grep -q '@[A-Z]*@' "$work/site/index.html" && fail "placeholder left in landing page"
 echo "OK"
