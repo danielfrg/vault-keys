@@ -1,25 +1,27 @@
+mod auth;
 mod cli;
+mod vault;
 
 use clap::Parser;
 
 use cli::{Cli, Command};
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let cli = Cli::parse();
 
-    let name = match &cli.command {
-        Command::Run { .. } => "run",
-        Command::Env { .. } => "env",
-        Command::Set { .. } => "set",
-        Command::Edit { .. } => "edit",
-        Command::Get { .. } => "get",
-        Command::List { .. } => "list",
-        Command::Rm { .. } => "rm",
-        Command::Export { .. } => "export",
-        Command::Status => "status",
-        Command::Doctor => "doctor",
-        Command::Push { .. } => "push",
+    let result = match &cli.command {
+        Command::Login { user, ttl } => auth::login(user, ttl.as_deref()).await,
+        Command::Logout => auth::logout(),
+        Command::Status => auth::status().await,
+        other => {
+            println!("keys: not implemented: {other:?}");
+            Ok(())
+        }
     };
 
-    println!("keys {name}: not implemented");
+    if let Err(e) = result {
+        eprintln!("keys: {e:#}");
+        std::process::exit(1);
+    }
 }

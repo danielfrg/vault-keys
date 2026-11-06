@@ -11,10 +11,20 @@ one process that needs them, instead of being exported from shell startup files.
 ```bash
 ```
 
+## Configuration
+
+No config file. `keys` reads the standard Vault environment variables:
+
+- `VAULT_ADDR`: Vault address, required (e.g. `https://vault.example.com`)
+- `VAULT_USER`: default for `keys login --user`
+- `VAULT_TOKEN`: optional, overrides `~/.vault-token`
+
 ## Commands
 
 | Command | Purpose |
 | --- | --- |
+| `keys login --user <name> [--ttl 12h]` | Log in with userpass (hidden password prompt) and save the token to `~/.vault-token` |
+| `keys logout` | Remove the saved token |
 | `keys run <set>... -- <cmd>` | Run a child process with secrets as env vars (nothing exported to the shell) |
 | `keys env <set>...` | Load secrets into the current interactive shell |
 | `keys set <set> <FIELD>` | Store a value using hidden input |

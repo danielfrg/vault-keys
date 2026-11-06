@@ -10,6 +10,20 @@ pub struct Cli {
 
 #[derive(Debug, Subcommand)]
 pub enum Command {
+    /// Log in to Vault with userpass and save the token to ~/.vault-token
+    Login {
+        /// Vault username
+        #[arg(short, long, env = "VAULT_USER")]
+        user: String,
+
+        /// Requested token lifetime, e.g. 12h (limited by Vault's max TTL)
+        #[arg(long)]
+        ttl: Option<String>,
+    },
+
+    /// Remove the saved Vault token
+    Logout,
+
     /// Run a command with secrets as environment variables
     Run {
         /// Secret sets to load
