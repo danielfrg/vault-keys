@@ -26,9 +26,9 @@ pub enum Command {
 
     /// Run a command with secrets as environment variables
     Run {
-        /// Secret sets to load
+        /// Secrets to load, as <secret> or <mount>:<secret>
         #[arg(required = true)]
-        sets: Vec<String>,
+        secrets: Vec<String>,
 
         /// Command to run (after `--`)
         #[arg(last = true, required = true)]
@@ -38,37 +38,37 @@ pub enum Command {
     /// Load secrets into the current shell
     Env {
         #[arg(required = true)]
-        sets: Vec<String>,
+        secrets: Vec<String>,
     },
 
     /// Store a value (read with hidden input)
-    Set { set: String, field: String },
+    Set { secret: String, key: String },
 
-    /// Edit a secret set in $EDITOR
-    Edit { set: String },
+    /// Edit a secret in $EDITOR
+    Edit { secret: String },
 
-    /// Show a secret set (field names only unless --show-values)
+    /// Show a secret (key names only unless --show-values)
     Get {
-        set: String,
+        secret: String,
 
-        /// Only this field
-        field: Option<String>,
+        /// Only this key
+        key: Option<String>,
 
         /// Print values
         #[arg(long)]
         show_values: bool,
     },
 
-    /// List secret sets (or the fields of one set)
-    List { set: Option<String> },
+    /// List secrets (or the keys of one secret)
+    List { secret: Option<String> },
 
-    /// Remove a secret set, or a single field
-    Rm { set: String, field: Option<String> },
+    /// Remove a secret, or a single key
+    Rm { secret: String, key: Option<String> },
 
-    /// Export secret sets in a given format
+    /// Export secrets in a given format
     Export {
         #[arg(required = true)]
-        sets: Vec<String>,
+        secrets: Vec<String>,
 
         #[arg(long, value_enum, default_value_t = Format::Dotenv)]
         format: Format,
