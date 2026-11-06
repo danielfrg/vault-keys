@@ -2,7 +2,11 @@ use clap::{Parser, Subcommand, ValueEnum};
 
 /// Fetch and manage credentials stored in HashiCorp Vault.
 #[derive(Debug, Parser)]
-#[command(name = "keys", version, about)]
+#[command(
+    name = "keys",
+    version = option_env!("KEYS_VERSION").unwrap_or(env!("CARGO_PKG_VERSION")),
+    about
+)]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Command,

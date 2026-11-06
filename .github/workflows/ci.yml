@@ -1,0 +1,152 @@
+name: CI
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  check:
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        runner: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install Rust
+        run: rustup toolchain install stable --profile minimal --component clippy,rustfmt && rustup default stable
+      - run: cargo fmt --check
+      - run: cargo clippy --locked --all-targets -- -D warnings
+      - run: cargo test --locked
+      - name: Packaging, installer and Pages build
+        run: bash scripts/test.sh
+
+  meta:
+    # Only main pushes and v* tags produce binaries.
+    if: github.event_name == 'push'
+    needs: check
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      channel: ${{ steps.v.outputs.channel }}
+    steps:
+      - id: v
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            version="$GITHUB_REF_NAME"; channel=release
+          else
+            version="v0.0.0-main.g${GITHUB_SHA:0:12}"; channel=main
+          fi
+          [[ "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.+-]+)?$ ]] || { echo "bad version: $version"; exit 1; }
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "channel=$channel" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: meta
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { runner: macos-latest, target: aarch64-apple-darwin }
+          - { runner: macos-15-intel, target: x86_64-apple-darwin }
+          - { runner: ubuntu-22.04, target: x86_64-unknown-linux-gnu }
+          - { runner: ubuntu-22.04-arm, target: aarch64-unknown-linux-gnu }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install Rust
+        run: rustup toolchain install stable --profile minimal --target ${{ matrix.target }} && rustup default stable
+      - name: Build release archive
+        env:
+          VERSION: ${{ needs.meta.outputs.version }}
+        run: bash scripts/package.sh "$VERSION" ${{ matrix.target }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: keys-package-${{ matrix.target }}
+          path: dist/
+          if-no-files-found: error
+
+  assets:
+    needs: [meta, build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: keys-package-*
+          merge-multiple: true
+          path: dist/
+      - name: Assemble and verify
+        env:
+          VERSION: ${{ needs.meta.outputs.version }}
+        run: |
+          test "$(ls dist/keys_*.tar.gz | wc -l)" -eq 4
+          cat dist/*.tar.gz.sha256 | LC_ALL=C sort > dist/SHA256SUMS
+          (cd dist && sha256sum --check SHA256SUMS)
+          printf '%s\n' "$VERSION" > dist/VERSION
+          rm dist/*.tar.gz.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: keys-release
+          path: dist/
+          if-no-files-found: error
+
+  release:
+    if: needs.meta.outputs.channel == 'release'
+    needs: [meta, assets]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: keys-release
+          path: dist/
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ needs.meta.outputs.version }}
+        run: |
+          flags=(--verify-tag --generate-notes --title "keys $VERSION")
+          [[ "$VERSION" == *-* ]] && flags+=(--prerelease --latest=false)
+          gh release create "$VERSION" dist/*.tar.gz dist/SHA256SUMS "${flags[@]}"
+
+  pages:
+    # Landing page, install.sh and the newest main build.
+    if: needs.meta.outputs.channel == 'main'
+    needs: [meta, assets]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: keys-release
+          path: dist/
+      - name: Build Pages site
+        env:
+          VERSION: ${{ needs.meta.outputs.version }}
+        run: bash scripts/build-pages.sh "$VERSION" "$GITHUB_SHA" dist _site
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - uses: actions/deploy-pages@v4
+        id: deployment

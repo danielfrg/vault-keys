@@ -110,3 +110,16 @@ pub fn read_hidden(prompt: &str) -> Result<String> {
         Ok(s.trim_end_matches(['\r', '\n']).to_string())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::fmt_duration;
+
+    #[test]
+    fn durations() {
+        assert_eq!(fmt_duration(45), "45s");
+        assert_eq!(fmt_duration(3 * 60 + 5), "3m05s");
+        assert_eq!(fmt_duration(11 * 3600 + 59 * 60), "11h59m");
+        assert_eq!(fmt_duration(32 * 86400), "32d0h");
+    }
+}

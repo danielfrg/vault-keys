@@ -24,3 +24,14 @@ pub async fn env(args: &[String]) -> Result<()> {
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::quote;
+
+    #[test]
+    fn quotes_for_posix_shells() {
+        assert_eq!(quote("plain"), "'plain'");
+        assert_eq!(quote("it's $x"), r"'it'\''s $x'");
+    }
+}

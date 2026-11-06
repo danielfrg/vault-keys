@@ -101,3 +101,40 @@ pub async fn load(client: &VaultClient, args: &[String]) -> Result<BTreeMap<Stri
     }
     Ok(merged)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn mount_prefix_is_parsed() {
+        assert_eq!(
+            parse_ref("homelab:aws").unwrap(),
+            ("homelab".into(), "aws".into())
+        );
+        assert_eq!(
+            parse_ref("homelab:team/aws/").unwrap(),
+            ("homelab".into(), "team/aws".into())
+        );
+    }
+
+    #[test]
+    fn empty_parts_are_rejected() {
+        assert!(parse_ref("homelab:").is_err());
+        assert!(parse_ref(":aws").is_err());
+        assert!(parse_mount_path(":x").is_err());
+        assert_eq!(
+            parse_mount_path("homelab:").unwrap(),
+            ("homelab".into(), String::new())
+        );
+    }
+
+    #[test]
+    fn env_names() {
+        assert!(valid_env_name("ANTHROPIC_API_KEY"));
+        assert!(valid_env_name("_x1"));
+        assert!(!valid_env_name("1X"));
+        assert!(!valid_env_name("bad-name"));
+        assert!(!valid_env_name(""));
+    }
+}

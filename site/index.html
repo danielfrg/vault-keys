@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>keys</title>
+<meta name="description" content="Fetch and manage secrets from HashiCorp Vault. Load them only in the process that needs them.">
+<style>
+:root { --bg: #fff; --fg: #1a1a1a; --muted: #666; --code: #f1f1f1; --accent: #0b5fff; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #111; --fg: #eee; --muted: #999; --code: #1e1e1e; --accent: #6ea0ff; }
+}
+body { background: var(--bg); color: var(--fg); font: 16px/1.6 system-ui, sans-serif; margin: 0; }
+main { max-width: 40rem; margin: 0 auto; padding: 3rem 16px; }
+h1 { font-size: 2.25rem; margin: 0 0 .25rem; }
+h2 { font-size: 1.1rem; margin: 2.25rem 0 .5rem; }
+p { margin: .5rem 0; }
+.tagline { color: var(--muted); font-size: 1.15rem; }
+pre { background: var(--code); border-radius: 6px; padding: .75rem 1rem; overflow-x: auto; margin: .5rem 0; font-size: .9rem; }
+code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+a { color: var(--accent); }
+footer { color: var(--muted); font-size: .85rem; margin-top: 3rem; }
+</style>
+</head>
+<body>
+<main>
+<h1>keys</h1>
+<p class="tagline">Secrets from your own HashiCorp Vault, loaded only where they are needed.</p>
+
+<h2>Install</h2>
+<p>macOS or Linux, amd64 or arm64:</p>
+<pre><code>curl -fsSL https://danielfrg.github.io/vault-keys/install.sh | bash</code></pre>
+<p>Newest build from <code>main</code> (<code>@VERSION@</code>, commit <code>@COMMIT@</code>):</p>
+<pre><code>curl -fsSL https://danielfrg.github.io/vault-keys/install.sh | KEYS_CHANNEL=main bash</code></pre>
+
+<h2>Use</h2>
+<pre><code>export VAULT_ADDR=https://vault.example.com
+keys login --user me
+
+# run one command with the secrets, nothing is exported to your shell
+keys run ai -- some-command
+
+# or load them into the current shell
+eval "$(keys env ai)"</code></pre>
+
+<footer>
+<a href="https://github.com/danielfrg/vault-keys">Source on GitHub</a>
+</footer>
+</main>
+</body>
+</html>
