@@ -1,6 +1,7 @@
 mod auth;
 mod cli;
 mod env;
+mod run;
 mod secrets;
 mod vault;
 
@@ -15,6 +16,7 @@ async fn main() {
     let result = match &cli.command {
         Command::Login { user, ttl } => auth::login(user, ttl.as_deref()).await,
         Command::Logout => auth::logout(),
+        Command::Run { secrets, command } => run::run(secrets, command).await,
         Command::Env { secrets } => env::env(secrets).await,
         Command::Status => auth::status().await,
         other => {

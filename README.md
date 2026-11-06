@@ -1,6 +1,6 @@
 # keys
 
-A small CLI to fetch and manage secrets stored in HashiCorp Vault.
+A small and friendly CLI to fetch and manage secrets stored in HashiCorp Vault.
 
 Secrets should only exist when explicitly loaded, ideally only inside the
 one process that needs them, instead of being exported from shell startup files. This CLI solves that problem.
@@ -80,6 +80,6 @@ Vault environment variables:
 | `keys export <secret> --format dotenv` | Export a secret in another format |
 | `keys status` | Show login identity, policies and token expiry |
 | `keys doctor` | Diagnose Vault/client/token/permission problems |
-| `keys push github <owner/repo> <KEY>` | Push a stored value to a GitHub Actions secret |
+| `keys push github <owner/repo> <KEY>` | TODO: Push a stored value to a GitHub Actions secret |
 
 A secret argument is `<secret>` (on the default mount) or `<mount>:<secret>`.
