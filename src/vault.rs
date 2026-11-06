@@ -96,3 +96,17 @@ pub fn describe(e: ClientError, context: &str) -> anyhow::Error {
         _ => anyhow::anyhow!("{context}: {e}"),
     }
 }
+
+/// Read a sensitive value: hidden prompt on a terminal, otherwise stdin
+/// (so `pass show x | keys set ...` works).
+pub fn read_hidden(prompt: &str) -> Result<String> {
+    use std::io::{IsTerminal, Read};
+
+    if std::io::stdin().is_terminal() {
+        Ok(rpassword::prompt_password(prompt)?)
+    } else {
+        let mut s = String::new();
+        std::io::stdin().read_to_string(&mut s)?;
+        Ok(s.trim_end_matches(['\r', '\n']).to_string())
+    }
+}

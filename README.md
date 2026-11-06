@@ -3,7 +3,7 @@
 A small and friendly CLI to fetch and manage secrets stored in HashiCorp Vault.
 
 Secrets should only exist when explicitly loaded, ideally only inside the
-one process that needs them, instead of being exported from shell startup files. This CLI solves that problem.
+one process that needs them, instead of being exported from shell startup files.
 
 ## Installation
 
@@ -74,9 +74,10 @@ Vault environment variables:
 | `keys logout` | Remove the saved token |
 | `keys run <secret>... -- <cmd>` | Run a child process with the secrets' keys as env vars (nothing exported to the shell) |
 | `keys env <secret>...` | Print `export` statements for the secrets' keys; use as `eval "$(keys env <secret>)"` |
-| `keys set <secret> <KEY>` | Store a value using hidden input |
-| `keys edit <secret>` | Edit a secret in `$EDITOR` and write it back |
-| `keys get` / `list` / `rm` | Inspect and remove secrets (key names only by default) |
+| `keys list [<mount>:][<secret>] [--show-values]` | List the secrets on a mount, or the key names of one secret; values only with `--show-values` |
+| `keys set <secret> <KEY>` | Add or update one key, reading the value with hidden input (or from stdin); other keys are kept |
+| `keys edit <secret>` | Edit a secret as JSON in `$VISUAL`/`$EDITOR` and write it back (keys you delete are removed) |
+| `keys rm <secret> [KEY] [--yes]` | Remove one key, or the whole secret |
 | `keys export <secret> --format dotenv` | Export a secret in another format |
 | `keys status` | Show login identity, policies and token expiry |
 | `keys doctor` | Diagnose Vault/client/token/permission problems |

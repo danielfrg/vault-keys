@@ -1,5 +1,3 @@
-use std::io::{IsTerminal, Read};
-
 use anyhow::{Context, Result, bail};
 use vaultrs::{auth::userpass, token};
 
@@ -7,21 +5,8 @@ use crate::vault;
 
 const USERPASS_MOUNT: &str = "userpass";
 
-fn read_password(user: &str) -> Result<String> {
-    if std::io::stdin().is_terminal() {
-        Ok(rpassword::prompt_password(format!(
-            "Password for {user}: "
-        ))?)
-    } else {
-        // Allows `pass show vault | keys login --user x`.
-        let mut s = String::new();
-        std::io::stdin().read_to_string(&mut s)?;
-        Ok(s.trim_end_matches(['\r', '\n']).to_string())
-    }
-}
-
 pub async fn login(user: &str, ttl: Option<&str>) -> Result<()> {
-    let password = read_password(user)?;
+    let password = vault::read_hidden(&format!("Password for {user}: "))?;
     if password.is_empty() {
         bail!("empty password");
     }

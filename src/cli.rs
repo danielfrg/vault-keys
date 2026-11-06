@@ -47,23 +47,26 @@ pub enum Command {
     /// Edit a secret in $EDITOR
     Edit { secret: String },
 
-    /// Show a secret (key names only unless --show-values)
-    Get {
-        secret: String,
+    /// List secrets on a mount, or the keys of one secret (names only unless --show-values)
+    List {
+        /// `<secret>` or `<mount>:<secret>`; omit to list the default mount
+        secret: Option<String>,
 
-        /// Only this key
-        key: Option<String>,
-
-        /// Print values
+        /// Print the values too (only for a single secret)
         #[arg(long)]
         show_values: bool,
     },
 
-    /// List secrets (or the keys of one secret)
-    List { secret: Option<String> },
-
     /// Remove a secret, or a single key
-    Rm { secret: String, key: Option<String> },
+    Rm {
+        secret: String,
+
+        key: Option<String>,
+
+        /// Do not ask for confirmation when removing a whole secret
+        #[arg(short, long)]
+        yes: bool,
+    },
 
     /// Export secrets in a given format
     Export {
