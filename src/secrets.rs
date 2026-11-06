@@ -28,7 +28,7 @@ pub fn parse_mount_path(arg: &str) -> Result<(String, String)> {
     Ok((mount, secret.trim_matches('/').to_string()))
 }
 
-fn default_mount() -> String {
+pub fn default_mount() -> String {
     match std::env::var("KEYS_MOUNT") {
         Ok(m) if !m.is_empty() => m,
         _ => DEFAULT_MOUNT.to_string(),

@@ -68,7 +68,7 @@ pub enum Command {
         yes: bool,
     },
 
-    /// Export secrets in a given format
+    /// Print secrets in a file format (redirect it: `keys export ai > .env`)
     Export {
         #[arg(required = true)]
         secrets: Vec<String>,
@@ -77,11 +77,8 @@ pub enum Command {
         format: Format,
     },
 
-    /// Show login identity, policies and token expiry
+    /// Check Vault connectivity, login, policies, token expiry and mount access
     Status,
-
-    /// Diagnose Vault, token and permission problems
-    Doctor,
 
     /// Push a stored value to another service
     Push {

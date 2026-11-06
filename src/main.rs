@@ -1,6 +1,7 @@
 mod auth;
 mod cli;
 mod env;
+mod export;
 mod manage;
 mod run;
 mod secrets;
@@ -26,6 +27,7 @@ async fn main() {
         } => manage::list(secret.as_deref(), *show_values).await,
         Command::Rm { secret, key, yes } => manage::rm(secret, key.as_deref(), *yes).await,
         Command::Env { secrets } => env::env(secrets).await,
+        Command::Export { secrets, format } => export::export(secrets, format).await,
         Command::Status => auth::status().await,
         other => {
             println!("keys: not implemented: {other:?}");

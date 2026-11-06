@@ -78,9 +78,8 @@ Vault environment variables:
 | `keys set <secret> <KEY>` | Add or update one key, reading the value with hidden input (or from stdin); other keys are kept |
 | `keys edit <secret>` | Edit a secret as JSON in `$VISUAL`/`$EDITOR` and write it back (keys you delete are removed) |
 | `keys rm <secret> [KEY] [--yes]` | Remove one key, or the whole secret |
-| `keys export <secret> --format dotenv` | Export a secret in another format |
-| `keys status` | Show login identity, policies and token expiry |
-| `keys doctor` | Diagnose Vault/client/token/permission problems |
+| `keys export <secret>... [--format dotenv]` | Print secrets as a `.env` file; redirect it (`keys export ai > .env`), it refuses to print to a terminal |
+| `keys status` | Check Vault connectivity, login, policies, token expiry and access to the default mount |
 | `keys push github <owner/repo> <KEY>` | TODO: Push a stored value to a GitHub Actions secret |
 
 A secret argument is `<secret>` (on the default mount) or `<mount>:<secret>`.
