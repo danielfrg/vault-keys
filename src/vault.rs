@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Result, bail};
 use vaultrs::client::{VaultClient, VaultClientSettingsBuilder};
+use vaultrs::error::ClientError;
 
 /// Path of the token file shared with the `vault` CLI.
 pub fn token_path() -> Result<PathBuf> {
@@ -67,5 +68,31 @@ pub fn fmt_duration(secs: u64) -> String {
         (0, 0, _) => format!("{m}m{s:02}s"),
         (0, _, _) => format!("{h}h{m:02}m"),
         _ => format!("{d}d{h}h"),
+    }
+}
+
+/// Client using the saved token; errors if not logged in.
+pub fn authed_client() -> Result<VaultClient> {
+    let Some(tok) = load_token()? else {
+        bail!("not logged in; run `keys login --user <name>`");
+    };
+    client(&tok)
+}
+
+/// Turn Vault client errors into short, actionable messages.
+pub fn describe(e: ClientError, context: &str) -> anyhow::Error {
+    match &e {
+        ClientError::APIError { code: 403, .. } => {
+            anyhow::anyhow!(
+                "{context}: permission denied (token expired, or its policies do not allow this; see `keys status`)"
+            )
+        }
+        ClientError::APIError { code, errors } if *code == 400 => {
+            anyhow::anyhow!("{context}: {}", errors.join("; "))
+        }
+        ClientError::RestClientError { .. } => {
+            anyhow::anyhow!("{context}: cannot reach Vault (check VAULT_ADDR and network)")
+        }
+        _ => anyhow::anyhow!("{context}: {e}"),
     }
 }

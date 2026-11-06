@@ -1,5 +1,7 @@
 mod auth;
 mod cli;
+mod env;
+mod secrets;
 mod vault;
 
 use clap::Parser;
@@ -13,6 +15,7 @@ async fn main() {
     let result = match &cli.command {
         Command::Login { user, ttl } => auth::login(user, ttl.as_deref()).await,
         Command::Logout => auth::logout(),
+        Command::Env { secrets } => env::env(secrets).await,
         Command::Status => auth::status().await,
         other => {
             println!("keys: not implemented: {other:?}");

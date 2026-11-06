@@ -1,7 +1,7 @@
 use std::io::{IsTerminal, Read};
 
 use anyhow::{Context, Result, bail};
-use vaultrs::{auth::userpass, error::ClientError, token};
+use vaultrs::{auth::userpass, token};
 
 use crate::vault;
 
@@ -29,14 +29,14 @@ pub async fn login(user: &str, ttl: Option<&str>) -> Result<()> {
     let client = vault::client("")?;
     let auth = userpass::login(&client, USERPASS_MOUNT, user, &password)
         .await
-        .map_err(|e| describe(e, "login failed"))?;
+        .map_err(|e| vault::describe(e, "login failed"))?;
 
     let mut lease = auth.lease_duration;
     if let Some(ttl) = ttl {
         let authed = vault::client(&auth.client_token)?;
         let renewed = token::renew_self(&authed, Some(ttl))
             .await
-            .map_err(|e| describe(e, "could not apply --ttl"))?;
+            .map_err(|e| vault::describe(e, "could not apply --ttl"))?;
         lease = renewed.lease_duration;
     }
 
@@ -59,13 +59,10 @@ pub fn logout() -> Result<()> {
 }
 
 pub async fn status() -> Result<()> {
-    let Some(tok) = vault::load_token()? else {
-        bail!("not logged in; run `keys login --user <name>`");
-    };
-    let client = vault::client(&tok)?;
+    let client = vault::authed_client()?;
     let info = token::lookup_self(&client)
         .await
-        .map_err(|e| describe(e, "token lookup failed"))?;
+        .map_err(|e| vault::describe(e, "token lookup failed"))?;
 
     let user = info
         .meta
@@ -84,22 +81,4 @@ pub async fn status() -> Result<()> {
     );
     println!("Renewable: {}", info.renewable.unwrap_or(false));
     Ok(())
-}
-
-/// Turn Vault client errors into short, actionable messages.
-fn describe(e: ClientError, context: &str) -> anyhow::Error {
-    match &e {
-        ClientError::APIError { code: 403, .. } => {
-            anyhow::anyhow!(
-                "{context}: permission denied (token expired or invalid? try `keys login`)"
-            )
-        }
-        ClientError::APIError { code, errors } if *code == 400 => {
-            anyhow::anyhow!("{context}: {}", errors.join("; "))
-        }
-        ClientError::RestClientError { .. } => {
-            anyhow::anyhow!("{context}: cannot reach Vault (check VAULT_ADDR and network)")
-        }
-        _ => anyhow::anyhow!("{context}: {e}"),
-    }
 }

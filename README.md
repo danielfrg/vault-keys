@@ -25,11 +25,17 @@ Load all the keys of a secret as env variables in the current shell:
 
 ```bash
 # Reads keychain/ai (the default mount is keychain)
-keys env ai
+eval "$(keys env ai)"
 
 # Read a secret from another mount: <mount>:<secret>
-keys env homelab:aws
+eval "$(keys env homelab:aws)"
 ```
+
+A program can't change its parent shell's environment, so `keys env` prints
+`export` statements (POSIX quoting, works in bash and zsh) and your shell
+evaluates them. Values never appear in shell history or process arguments, and
+`keys env` refuses to print to a terminal. With several secrets, later ones win
+on duplicate keys.
 
 ## Vault layout and terminology
 
@@ -67,7 +73,7 @@ Vault environment variables:
 | `keys login --user <name> [--ttl 12h]` | Log in with userpass |
 | `keys logout` | Remove the saved token |
 | `keys run <secret>... -- <cmd>` | Run a child process with the secrets' keys as env vars (nothing exported to the shell) |
-| `keys env <secret>...` | Load the secrets' keys into the current interactive shell |
+| `keys env <secret>...` | Print `export` statements for the secrets' keys; use as `eval "$(keys env <secret>)"` |
 | `keys set <secret> <KEY>` | Store a value using hidden input |
 | `keys edit <secret>` | Edit a secret in `$EDITOR` and write it back |
 | `keys get` / `list` / `rm` | Inspect and remove secrets (key names only by default) |
