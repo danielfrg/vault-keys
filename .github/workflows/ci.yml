@@ -16,7 +16,7 @@ jobs:
     runs-on: ${{ matrix.runner }}
     strategy:
       matrix:
-        runner: [ubuntu-latest, macos-latest]
+        runner: [ubuntu-24.04, macos-latest]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install Rust
@@ -31,7 +31,7 @@ jobs:
     # Only main pushes and v* tags produce binaries.
     if: github.event_name == 'push'
     needs: check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       version: ${{ steps.v.outputs.version }}
       channel: ${{ steps.v.outputs.channel }}
@@ -66,7 +66,7 @@ jobs:
         env:
           VERSION: ${{ needs.meta.outputs.version }}
         run: bash scripts/package.sh "$VERSION" ${{ matrix.target }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: keys-package-${{ matrix.target }}
           path: dist/
@@ -74,9 +74,9 @@ jobs:
 
   assets:
     needs: [meta, build]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: keys-package-*
           merge-multiple: true
@@ -90,7 +90,7 @@ jobs:
           (cd dist && sha256sum --check SHA256SUMS)
           printf '%s\n' "$VERSION" > dist/VERSION
           rm dist/*.tar.gz.sha256
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: keys-release
           path: dist/
@@ -99,11 +99,11 @@ jobs:
   release:
     if: needs.meta.outputs.channel == 'release'
     needs: [meta, assets]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: keys-release
           path: dist/
@@ -121,7 +121,7 @@ jobs:
     # Landing page, install.sh and the newest main build.
     if: needs.meta.outputs.channel == 'main'
     needs: [meta, assets]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       pages: write
@@ -136,7 +136,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: keys-release
           path: dist/
@@ -144,9 +144,9 @@ jobs:
         env:
           VERSION: ${{ needs.meta.outputs.version }}
         run: bash scripts/build-pages.sh "$VERSION" dist _site
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
-      - uses: actions/deploy-pages@v4
+      - uses: actions/deploy-pages@v5
         id: deployment
