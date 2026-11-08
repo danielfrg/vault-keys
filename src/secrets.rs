@@ -7,6 +7,47 @@ const DEFAULT_MOUNT: &str = "keychain";
 
 pub type Raw = HashMap<String, serde_json::Value>;
 
+/// KV v2 list as `GET <mount>/metadata/<path>?list=true`.
+///
+/// vaultrs sends the non-standard `LIST` method, which some reverse proxies
+/// (e.g. Envoy over HTTP/1.1) reject before it reaches Vault. The official
+/// Vault client uses this GET form for the same reason.
+struct ListRequest {
+    mount: String,
+    path: String,
+}
+
+impl rustify::Endpoint for ListRequest {
+    type Response = vaultrs::api::kv2::responses::ListSecretsResponse;
+    const REQUEST_BODY_TYPE: rustify::enums::RequestType = rustify::enums::RequestType::JSON;
+    const RESPONSE_BODY_TYPE: rustify::enums::ResponseType = rustify::enums::ResponseType::JSON;
+
+    fn path(&self) -> String {
+        format!("{}/metadata/{}", self.mount, self.path)
+    }
+
+    fn method(&self) -> rustify::enums::RequestMethod {
+        rustify::enums::RequestMethod::GET
+    }
+
+    fn query(&self) -> Result<Option<String>, rustify::errors::ClientError> {
+        Ok(Some("list=true".to_string()))
+    }
+}
+
+/// Names under `<mount>/<path>`; same semantics as `vaultrs::kv2::list`.
+pub async fn list(
+    client: &VaultClient,
+    mount: &str,
+    path: &str,
+) -> Result<Vec<String>, ClientError> {
+    let endpoint = ListRequest {
+        mount: mount.to_string(),
+        path: path.to_string(),
+    };
+    Ok(vaultrs::api::exec_with_result(client, endpoint).await?.keys)
+}
+
 /// Parse `<secret>` or `<mount>:<secret>` into (mount, secret).
 pub fn parse_ref(arg: &str) -> Result<(String, String)> {
     let (mount, secret) = parse_mount_path(arg)?;

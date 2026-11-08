@@ -116,7 +116,7 @@ pub async fn list(arg: Option<&str>, show_values: bool) -> Result<()> {
     if show_values {
         bail!("--show-values needs a single secret, e.g. `keys list ai --show-values`");
     }
-    match kv2::list(&client, &mount, &path).await {
+    match secrets::list(&client, &mount, &path).await {
         Ok(mut names) => {
             names.sort();
             for n in names {

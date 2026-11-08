@@ -1,5 +1,5 @@
 use anyhow::{Context, Result, bail};
-use vaultrs::{auth::userpass, error::ClientError, kv2, token};
+use vaultrs::{auth::userpass, error::ClientError, token};
 
 use crate::{secrets, vault};
 
@@ -124,7 +124,7 @@ pub async fn status() -> Result<()> {
 
     // 3. Access to the default mount.
     let mount = secrets::default_mount();
-    match kv2::list(&client, &mount, "").await {
+    match secrets::list(&client, &mount, "").await {
         Ok(_) | Err(ClientError::APIError { code: 404, .. }) => {
             line("Mount", true, format!("{mount} (can list secrets)"))
         }

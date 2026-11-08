@@ -90,9 +90,26 @@ pub fn describe(e: ClientError, context: &str) -> anyhow::Error {
         ClientError::APIError { code, errors } if *code == 400 => {
             anyhow::anyhow!("{context}: {}", errors.join("; "))
         }
-        ClientError::RestClientError { .. } => {
-            anyhow::anyhow!("{context}: cannot reach Vault (check VAULT_ADDR and network)")
+        // An HTTP error whose body is not Vault's JSON: usually a proxy in
+        // front of Vault rejected the request. Vault was reachable.
+        ClientError::RestClientError {
+            source: rustify::errors::ClientError::ServerResponseError { code, content },
+        } => {
+            let body = content.as_deref().unwrap_or("").trim();
+            let body: String = body.chars().take(200).collect();
+            if body.is_empty() {
+                anyhow::anyhow!(
+                    "{context}: unexpected HTTP {code} from Vault or a proxy in front of it"
+                )
+            } else {
+                anyhow::anyhow!(
+                    "{context}: unexpected HTTP {code} from Vault or a proxy in front of it: {body}"
+                )
+            }
         }
+        ClientError::RestClientError {
+            source: rustify::errors::ClientError::RequestError { .. },
+        } => anyhow::anyhow!("{context}: cannot reach Vault (check VAULT_ADDR and network)"),
         _ => anyhow::anyhow!("{context}: {e}"),
     }
 }
@@ -113,7 +130,8 @@ pub fn read_hidden(prompt: &str) -> Result<String> {
 
 #[cfg(test)]
 mod tests {
-    use super::fmt_duration;
+    use super::{describe, fmt_duration};
+    use vaultrs::error::ClientError;
 
     #[test]
     fn durations() {
@@ -121,5 +139,19 @@ mod tests {
         assert_eq!(fmt_duration(3 * 60 + 5), "3m05s");
         assert_eq!(fmt_duration(11 * 3600 + 59 * 60), "11h59m");
         assert_eq!(fmt_duration(32 * 86400), "32d0h");
+    }
+
+    #[test]
+    fn non_vault_http_error_is_not_reported_as_unreachable() {
+        let e = ClientError::RestClientError {
+            source: rustify::errors::ClientError::ServerResponseError {
+                code: 400,
+                content: Some("Bad Request".into()),
+            },
+        };
+        assert_eq!(
+            describe(e, "keychain").to_string(),
+            "keychain: unexpected HTTP 400 from Vault or a proxy in front of it: Bad Request"
+        );
     }
 }
