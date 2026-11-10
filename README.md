@@ -50,7 +50,7 @@ Load all the keys of a secret as env variables in the current shell:
 eval "$(keys env ai)"
 
 # Read a secret from another mount: <mount>:<secret>
-eval "$(keys env homelab:aws)"
+eval "$(keys env personal:aws)"
 ```
 
 A program can't change its parent shell's environment, so `keys env` prints
@@ -63,7 +63,7 @@ on duplicate keys.
 
 `keys` uses Vault's terms.
 
-- **Mount**: a KV v2 secrets engine enabled at a path, e.g. `keychain` or `homelab`.
+- **Mount**: a KV v2 secrets engine enabled at a path, e.g. `keychain` or `personal`.
 - **Secret**: a path on a mount holding key/value pairs: `keychain/<secret>`.
 - **Key**: a name inside a secret, e.g. `MY_API_KEY`. It becomes the env variable name.
 - **Value**: what the key holds.

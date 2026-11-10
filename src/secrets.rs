@@ -150,23 +150,23 @@ mod tests {
     #[test]
     fn mount_prefix_is_parsed() {
         assert_eq!(
-            parse_ref("homelab:aws").unwrap(),
-            ("homelab".into(), "aws".into())
+            parse_ref("personal:aws").unwrap(),
+            ("personal".into(), "aws".into())
         );
         assert_eq!(
-            parse_ref("homelab:team/aws/").unwrap(),
-            ("homelab".into(), "team/aws".into())
+            parse_ref("personal:team/aws/").unwrap(),
+            ("personal".into(), "team/aws".into())
         );
     }
 
     #[test]
     fn empty_parts_are_rejected() {
-        assert!(parse_ref("homelab:").is_err());
+        assert!(parse_ref("personal:").is_err());
         assert!(parse_ref(":aws").is_err());
         assert!(parse_mount_path(":x").is_err());
         assert_eq!(
-            parse_mount_path("homelab:").unwrap(),
-            ("homelab".into(), String::new())
+            parse_mount_path("personal:").unwrap(),
+            ("personal".into(), String::new())
         );
     }
 
