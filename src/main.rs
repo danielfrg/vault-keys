@@ -3,13 +3,14 @@ mod cli;
 mod env;
 mod export;
 mod manage;
+mod push_github;
 mod run;
 mod secrets;
 mod vault;
 
 use clap::Parser;
 
-use cli::{Cli, Command};
+use cli::{Cli, Command, PushTarget};
 
 #[tokio::main]
 async fn main() {
@@ -29,10 +30,15 @@ async fn main() {
         Command::Env { secrets } => env::env(secrets).await,
         Command::Export { secrets, format } => export::export(secrets, format).await,
         Command::Status => auth::status().await,
-        other => {
-            println!("keys: not implemented: {other:?}");
-            Ok(())
-        }
+        Command::Push {
+            target:
+                PushTarget::Github {
+                    repo,
+                    all,
+                    dry_run,
+                    no_prune,
+                },
+        } => push_github::push(repo.as_deref(), *all, *dry_run, !*no_prune).await,
     };
 
     if let Err(e) = result {

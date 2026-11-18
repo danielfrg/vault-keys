@@ -102,6 +102,40 @@ Vault environment variables:
 | `keys rm <secret> [KEY] [--yes]` | Remove one key, or the whole secret |
 | `keys export <secret>... [--format dotenv]` | Print secrets as a `.env` file; redirect it (`keys export ai > .env`), it refuses to print to a terminal |
 | `keys status` | Check Vault connectivity, login, policies, token expiry and access to the default mount |
-| `keys push github <owner/repo> <KEY>` | TODO: Push a stored value to a GitHub Actions secret |
+| `keys push github <owner/repo> [--dry-run] [--no-prune]` | Make a repository's GitHub Actions secrets match Vault |
+| `keys push github --all [--dry-run]` | The same for every repository on the GitHub mount |
 
 A secret argument is `<secret>` (on the default mount) or `<mount>:<secret>`.
+
+## GitHub Actions secrets
+
+`keys push github` makes Vault the only source of a repository's Actions
+secrets. It reads a separate KV v2 mount, `github` by default
+(`KEYS_GITHUB_MOUNT` to change it):
+
+| Secret | Holds |
+| --- | --- |
+| `github:<owner>/<repo>` | The repository's own keys, named like the GitHub secrets |
+| `github:shared/<name>` | Keys used by several repositories |
+
+A repository pulls in shared secrets through the `include` custom metadata of
+its secret, comma separated. Includes merge in order and the repository's own
+keys come last, so they win:
+
+```bash
+vault kv metadata put -mount=github -custom-metadata=include=shared/notify acme/site
+keys set github:shared/notify NOTIFY_TOKEN
+keys set github:acme/site DEPLOY_ZONE
+
+keys push github acme/site --dry-run   # add / update / delete, names only
+keys push github acme/site
+```
+
+A push sets every key (GitHub never returns values, so they cannot be
+compared) and deletes repository secrets that are not in Vault; `--no-prune`
+keeps them. A value of exactly `TODO` is a placeholder: it is not pushed and the
+existing GitHub secret is left alone, so a repository can move over one key at a
+time.
+
+The GitHub token comes from `GH_TOKEN`, `GITHUB_TOKEN`, or `gh auth token`, and
+needs admin access to the repository's secrets.

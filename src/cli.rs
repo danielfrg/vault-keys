@@ -84,7 +84,7 @@ pub enum Command {
     /// Check Vault connectivity, login, policies, token expiry and mount access
     Status,
 
-    /// Push a stored value to another service
+    /// Push secrets to another service
     Push {
         #[command(subcommand)]
         target: PushTarget,
@@ -98,12 +98,26 @@ pub enum Format {
 
 #[derive(Debug, Subcommand)]
 pub enum PushTarget {
-    /// Push a value to a GitHub Actions secret
+    /// Make a repository's GitHub Actions secrets match Vault
+    ///
+    /// Reads `<owner>/<repo>` on the GitHub mount (default `github`, or
+    /// KEYS_GITHUB_MOUNT) plus the secrets in its `include` custom metadata,
+    /// sets every key as a repository secret and deletes the rest.
     Github {
         /// Repository, as owner/repo
-        repo: String,
+        #[arg(required_unless_present = "all", conflicts_with = "all")]
+        repo: Option<String>,
 
-        /// Name of the stored value
-        name: String,
+        /// Push every <owner>/<repo> on the GitHub mount
+        #[arg(long)]
+        all: bool,
+
+        /// Show what would change without touching GitHub
+        #[arg(short = 'n', long)]
+        dry_run: bool,
+
+        /// Keep GitHub secrets that are not in Vault
+        #[arg(long)]
+        no_prune: bool,
     },
 }
